@@ -53,9 +53,32 @@ public class ParkingServiceTest {
     }
 
     @Test
-    public void processExitingVehicleTest(){
+    public void processExitingVehicleTest() throws Exception {
+
+        Ticket ticket = setupTicket();
+        when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn(ticket.getVehicleRegNumber());
+        when(ticketDAO.getTicket(ticket.getVehicleRegNumber())).thenReturn(ticket);
+        when(ticketDAO.getNbTicket(ticket.getVehicleRegNumber())).thenReturn(2);
+        when(ticketDAO.updateTicket(ticket)).thenReturn(true);
+        when(parkingSpotDAO.updateParking(ticket.getParkingSpot())).thenReturn(true);
+
         parkingService.processExitingVehicle();
+
+        verify(ticketDAO, Mockito.times(1)).getNbTicket(any());
+        verify(ticketDAO, Mockito.times(1)).updateTicket(any(Ticket.class));
         verify(parkingSpotDAO, Mockito.times(1)).updateParking(any(ParkingSpot.class));
+    }
+
+    private Ticket setupTicket(){
+        Ticket ticket = new Ticket();
+        ticket.setId(1);
+        ticket.setVehicleRegNumber("123");
+        ticket.setInTime(new Date(System.currentTimeMillis() - (60*60*1000)));
+        ticket.setOutTime(null);
+        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR, false);
+        ticket.setParkingSpot(parkingSpot);
+
+        return ticket;
     }
 
 }
